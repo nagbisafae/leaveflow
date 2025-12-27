@@ -2,6 +2,23 @@ services:
   # ... autres services (leave-service, postgres, etc.)
 
   # RabbitMQ
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: notificationdb
+    ports:
+      - "5432:5432"
+    networks:
+      - leaveflow-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -21,7 +38,7 @@ services:
 
   # Notification Service
   notification-service:
-    build: ./notification-service
+    build: .
     container_name: notification-service
     ports:
       - "8084:8084"
