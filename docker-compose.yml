@@ -1,0 +1,239 @@
+services:
+  # ==========================================
+  # INFRASTRUCTURE PARTAGÉE (50/50)
+  # ==========================================
+
+  # PostgreSQL (partagé entre Person A et Person B)
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    networks:
+      - leaveflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ (Person B)
+    # RabbitMQ (Person B)
+    # RabbitMQ (Person B)
+  rabbitmq:
+    image: rabbitmq:3-management
+    command: [ "bash","-c","chmod 400 /var/lib/rabbitmq/.erlang.cookie; rabbitmq-server" ]
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/mnesia
+    networks:
+      - leaveflow-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+
+
+
+
+
+    # ==========================================
+  # SERVICES PERSON A
+  # ==========================================
+
+  # Employee Service (Person A)
+  employee-service:
+    build:
+      context: ./employee-service
+      dockerfile: Dockerfile
+    container_name: employee-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/employeedb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+  # Calendar Service (Person A)
+  calendar-service:
+    build:
+      context: ./calendar-service
+      dockerfile: Dockerfile
+    container_name: calendar-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/calendardb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+  # ==========================================
+  # SERVICES PERSON B
+  # ==========================================
+
+  # Leave Service (Person B)
+  leave-service:
+    build:
+      context: ./leave-service
+      dockerfile: Dockerfile
+    container_name: leave-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leavedb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      EMPLOYEE_SERVICE_URL: http://employee-service:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      employee-service:
+        condition: service_started
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+  # Notification Service (Person B)
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notificationdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+
+
+
+  # ==========================================
+  # API GATEWAY (Partagé 50/50)
+  # ==========================================
+
+  # NGINX API Gateway - ✅ SECTION MISE À JOUR
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+      dockerfile: Dockerfile
+    container_name: nginx-gateway
+    ports:
+      - "80:80"
+    depends_on:
+      - employee-service
+      - calendar-service
+      - leave-service
+      - notification-service
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+  # ==========================================
+  # MONITORING (Partagé 50/50)
+  # ==========================================
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    platform: linux/amd64
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    platform: linux/amd64
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    networks:
+      - leaveflow-network
+    restart: unless-stopped
+
+
+# ==========================================
+# NETWORKS
+# ==========================================
+networks:
+  leaveflow-network:
+    driver: bridge
+
+# ==========================================
+# VOLUMES
+# ==========================================
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+  rabbitmq_data:
