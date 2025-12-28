@@ -9,7 +9,7 @@ import org.springframework.web.client.RestTemplate;
 public class EmployeeClient {
     private RestTemplate restTemplate;
     private String employeServiceBaseUrl;
-    public EmployeeClient(RestTemplate restTemplate, @Value("${employe.service.url}") String employeServiceBaseUrl) {
+    public EmployeeClient(RestTemplate restTemplate, @Value("${employee.service.url}") String employeServiceBaseUrl) {
        this.restTemplate = new RestTemplate();
         this.employeServiceBaseUrl =employeServiceBaseUrl ;
     }
