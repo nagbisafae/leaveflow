@@ -24,8 +24,6 @@ services:
       retries: 5
 
   # RabbitMQ (Person B)
-    # RabbitMQ (Person B)
-    # RabbitMQ (Person B)
   rabbitmq:
     image: rabbitmq:3-management
     command: [ "bash","-c","chmod 400 /var/lib/rabbitmq/.erlang.cookie; rabbitmq-server" ]
@@ -47,9 +45,6 @@ services:
       retries: 5
       start_period: 40s
     restart: unless-stopped
-
-
-
 
 
     # ==========================================
@@ -83,7 +78,7 @@ services:
       dockerfile: Dockerfile
     container_name: calendar-service
     ports:
-      - "8082:8082"
+      - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/calendardb
       SPRING_DATASOURCE_USERNAME: postgres
@@ -107,7 +102,7 @@ services:
       dockerfile: Dockerfile
     container_name: leave-service
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/leavedb
       SPRING_DATASOURCE_USERNAME: postgres
@@ -118,6 +113,7 @@ services:
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
       EMPLOYEE_SERVICE_URL: http://employee-service:8080
+      CALENDAR_SERVICE_URL: http://calendar-service:8081
     depends_on:
       postgres:
         condition: service_healthy
@@ -136,7 +132,7 @@ services:
       dockerfile: Dockerfile
     container_name: notification-service
     ports:
-      - "8084:8084"
+      - "8083:8083"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notificationdb
       SPRING_DATASOURCE_USERNAME: postgres

@@ -12,6 +12,12 @@
         </processorPath>
         <module name="employee-service" />
       </profile>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="leave-service" />
+      </profile>
       <profile name="Annotation profile for notification-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -23,11 +29,15 @@
         <module name="notification-service" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="frontend-service" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="calendar-service" options="-parameters" />
       <module name="employee-service" options="-parameters" />
+      <module name="frontend-service" options="-parameters" />
       <module name="leave-service" options="-parameters" />
       <module name="notification-service" options="-parameters" />
     </option>
