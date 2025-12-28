@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: leave-service-config
+data:
+  # Database
+  database.url: "jdbc:postgresql://postgres:5432/leavedb"
+
+  # RabbitMQ
+  rabbitmq.host: "rabbitmq"
+  rabbitmq.port: "5672"
+
+  # External Services
+  employe.service.url: "http://employee-service:8080"
+  calendar.service.url: "http://calendar-service:8082"
+
+  # Application
+  spring.application.name: "leave-service"
