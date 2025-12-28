@@ -108,4 +108,10 @@ public class LeaveService {
         return !overlaps.isEmpty();
 
     }
+    public List<LeaveResponse> getAllLeaves() {
+        return leaveRepository.findAll()
+                .stream()
+                .map(leaveMapper::toLeaveResponse)
+                .collect(Collectors.toList());
+    }
 }
