@@ -29,7 +29,9 @@ public class LeaveController {
     public Object getLeaves(@RequestParam(required = false) Long employeeId,
                             @RequestParam(required = false) Long managerId,
                             @RequestParam(required = false) LeaveStatus leaveStatus) {
-        if(employeeId !=null) {
+        if(employeeId ==null && managerId == null && leaveStatus == null) {
+            return leaveService.getAllLeaves();
+        }else if(employeeId != null) {
             return leaveService.getLeavesForEmploye(employeeId);
         }else if(managerId != null && leaveStatus != null) {
             return leaveService.getLeavesForManagersAndStatus(managerId, leaveStatus);

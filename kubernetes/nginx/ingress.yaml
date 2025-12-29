@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: leaveflow-ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /employees
+            pathType: Prefix
+            backend:
+              service:
+                name: employee-service
+                port:
+                  number: 8080
+          - path: /calendar
+            pathType: Prefix
+            backend:
+              service:
+                name: calendar-service
+                port:
+                  number: 8081
