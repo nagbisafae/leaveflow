@@ -22,3 +22,17 @@ spec:
                 name: calendar-service
                 port:
                   number: 8081
+          - path: /leaves
+            pathType: Prefix
+            backend:
+              service:
+                name: leave-service
+                port:
+                  number: 8082
+          - path: /notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8083
