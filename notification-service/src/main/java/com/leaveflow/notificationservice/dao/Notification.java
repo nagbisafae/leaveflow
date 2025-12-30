@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
     @Column(nullable = false)
     private Long recipientId;  // ID de l'employé qui reçoit la notification
 
