@@ -3,6 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
+    platform: linux/amd64
     container_name: leave-postgres
     environment:
       POSTGRES_DB: leavedb

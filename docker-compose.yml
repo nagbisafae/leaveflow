@@ -182,7 +182,7 @@ services:
   # Prometheus
   prometheus:
     image: prom/prometheus:latest
-    platform: linux/amd64
+   # platform: linux/amd64
     container_name: prometheus
     ports:
       - "9090:9090"
@@ -200,7 +200,7 @@ services:
   # Grafana
   grafana:
     image: grafana/grafana:latest
-    platform: linux/amd64
+    #platform: linux/amd64
     container_name: grafana
     ports:
       - "3000:3000"
