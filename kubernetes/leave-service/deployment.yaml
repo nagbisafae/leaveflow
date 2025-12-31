@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: leave-service
-          image: leave-service:latest
-          imagePullPolicy: Never
+          image: safaenagbi/leave-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:
