@@ -1,0 +1,59 @@
+package com.leaveflow.leaveservice.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.DefaultClassMapper;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitMQConfig {
+
+    public static final String EXCHANGE = "leave.events.exchange";
+    public static final String QUEUE = "leave.events.queue";
+    public static final String ROUTING_KEY = "leave.events";
+
+    @Bean
+    public DirectExchange leaveEventsExchange() {
+        return new DirectExchange(EXCHANGE);
+    }
+
+    @Bean
+    public Queue leaveEventsQueue() {
+        return new Queue(QUEUE, true);
+    }
+
+    @Bean
+    public Binding binding(Queue leaveEventsQueue, DirectExchange leaveEventsExchange) {
+        return BindingBuilder
+                .bind(leaveEventsQueue)
+                .to(leaveEventsExchange)
+                .with(ROUTING_KEY);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
+
+        converter.setCreateMessageIds(false);
+
+        return converter;
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
+        return rabbitTemplate;
+    }
+}

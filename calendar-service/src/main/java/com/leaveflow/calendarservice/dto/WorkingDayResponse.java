@@ -12,6 +12,6 @@ import java.time.LocalDate;
 public class WorkingDayResponse {
 
     private LocalDate date;
-    private boolean working;
+    private boolean isWorkingDay;
     private String reason;
 }
