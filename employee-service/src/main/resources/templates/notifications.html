@@ -154,6 +154,7 @@
     </div>
 
     <!-- Notifications List -->
+    <!-- Notifications List -->
     <div th:if="${notifications}" th:each="notification : ${notifications}">
         <div class="notification-card">
             <div class="notification-header d-flex align-items-center">
@@ -164,16 +165,15 @@
                     </svg>
                 </div>
                 <div class="flex-grow-1">
-                    <h6 class="notification-title" th:text="${notification.title}">Notification Title</h6>
+                    <h6 class="notification-title">Leave Request Notification</h6>
                     <p class="notification-meta">
-                        <span th:text="${notification.timestamp}">2025-01-01 12:00:00</span>
-                        <span class="badge badge-gradient ms-2" th:text="${notification.type}">INFO</span>
+                        <span class="badge badge-gradient ms-2">New</span>
                     </p>
                 </div>
             </div>
             <div class="notification-body">
                 <p class="notification-message" th:text="${notification.message}">
-                    Notification message content goes here...
+                    Notification message
                 </p>
             </div>
         </div>
