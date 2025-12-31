@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: notification-service:latest
-          imagePullPolicy: Never
+          image: safaenagbi/notification-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:

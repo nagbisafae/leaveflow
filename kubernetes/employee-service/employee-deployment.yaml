@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
         - name: employee-service
-          image: leaveflow-employee-service:latest
-          imagePullPolicy: Never
+          image: safaenagbi/employee-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
