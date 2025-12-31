@@ -22,6 +22,13 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
 
+    public List<NotificationResponse> getAllNotifications() {
+        return notificationRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     // Créer une notification
     @Transactional
     public NotificationResponse createNotification(NotificationDto notificationDto) {
@@ -43,37 +50,57 @@ public class NotificationService {
     public void processLeaveEvent(LeaveEventDto event) {
         log.info("Traitement de l'événement: {} pour le congé {}", event.getLeaveStatus(), event.getLeaveId());
 
+        String status = event.getLeaveStatus();
+
+        if ("Pending_Manager".equalsIgnoreCase(status)) {
+            status = "PENDING";
+        } else if ("Approved".equalsIgnoreCase(status)) {
+            status = "APPROVED";
+        } else if ("Rejected".equalsIgnoreCase(status)) {
+            status = "REJECTED";
+        }
+
+        event.setLeaveStatus(status);
+
         switch (event.getLeaveStatus()) {
+
             case "PENDING":
-                // Notifier le manager
                 if (event.getManagerId() != null) {
                     createNotificationForManager(event);
                 }
-                // Confirmer à l'employé
-                createNotificationForEmployee(event, NotificationType.LEAVE_SUBMITTED,
-                        "Votre demande de congé a été soumise et est en attente d'approbation.");
+                createNotificationForEmployee(
+                        event,
+                        NotificationType.LEAVE_SUBMITTED,
+                        "Votre demande de congé a été soumise et est en attente d'approbation."
+                );
                 break;
 
             case "APPROVED":
-                // Notifier l'employé
-                createNotificationForEmployee(event, NotificationType.LEAVE_APPROVED,
-                        "Votre demande de congé du " + event.getStartDate() + " au " +
-                                event.getEndDate() + " a été approuvée !");
+                createNotificationForEmployee(
+                        event,
+                        NotificationType.LEAVE_APPROVED,
+                        "Votre demande de congé du " + event.getStartDate() +
+                                " au " + event.getEndDate() + " a été approuvée !"
+                );
                 break;
 
             case "REJECTED":
-                // Notifier l'employé
                 String rejectionMsg = "Votre demande de congé a été rejetée.";
                 if (event.getLeaveReason() != null) {
                     rejectionMsg += " Raison: " + event.getLeaveReason();
                 }
-                createNotificationForEmployee(event, NotificationType.LEAVE_REJECTED, rejectionMsg);
+                createNotificationForEmployee(
+                        event,
+                        NotificationType.LEAVE_REJECTED,
+                        rejectionMsg
+                );
                 break;
 
             default:
                 log.warn("Statut de congé inconnu: {}", event.getLeaveStatus());
         }
     }
+
 
     // Créer notification pour l'employé
     private void createNotificationForEmployee(LeaveEventDto event, NotificationType type, String message) {

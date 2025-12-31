@@ -19,6 +19,12 @@ public class NotificationController {
     @Autowired
     private final NotificationService notificationService;
 
+    // Get ALL notifications (for admin/testing)
+    @GetMapping
+    public List<NotificationResponse> getAllNotifications() {
+        return notificationService.getAllNotifications();
+    }
+
     // Créer une notification manuellement (pour tests)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
